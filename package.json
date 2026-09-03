@@ -1,0 +1,73 @@
+{
+  "name": "yihong.run",
+  "description": "Yi hong",
+  "version": "1.0.0",
+  "author": "Yi Hong <zouzou0208@gmail.com>",
+  "packageManager": "pnpm@8.9.0+sha256.8f5264ad1d100da11a6add6bb8a94c6f1e913f9e9261b2a551fabefad2ec0fec",
+  "dependencies": {
+    "@mapbox/mapbox-gl-language": "^1.0.1",
+    "@mapbox/polyline": "^1.2.1",
+    "html-to-image": "^1.11.13",
+    "@math.gl/web-mercator": "^4.1.0",
+    "@svgr/plugin-svgo": "^8.1.0",
+    "@vercel/analytics": "^2.0.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "gcoord": "^1.0.7",
+    "mapbox-gl": "^3.23.0",
+    "rc-virtual-list": "^3.19.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-ga4": "^3.0.1",
+    "react-helmet-async": "^3.0.0",
+    "react-map-gl": "^8.1.1",
+    "react-router-dom": "^7.14.2",
+    "recharts": "^3.8.1",
+    "vite": "^8.0.10",
+    "vite-plugin-svgr": "^5.2.0"
+  },
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data:clean": "rm -f run_page/data.db {GPX,TCX,FIT}_OUT/* activities/* src/static/activities.json",
+    "data:download:garmin": "python3 run_page/garmin_sync.py",
+    "data:analysis": "python3 run_page/gen_svg.py --from-db --type github --output assets/github.svg",
+    "build": "vite build",
+    "develop": "vite dev",
+    "dev": "vite dev",
+    "serve": "vite serve",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.tsx --fix",
+    "check": "prettier --check \"src/main.tsx\" \"src/**/*.{css,module.css,json,ts,tsx}\" \"*.{yaml,json,ts}\" \"assets/index.tsx\" \"eslint.config.mjs\"",
+    "format": "prettier --write \"src/main.tsx\" \"src/**/*.{css,module.css,json,ts,tsx}\" \"*.{yaml,json,ts}\" \"assets/index.tsx\" \"eslint.config.mjs\"",
+    "ci": "pnpm run format && pnpm run lint && pnpm run build"
+  },
+  "engineStrict": true,
+  "browserslist": "defaults, not ie 11",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yihong0618/running_page"
+  },
+  "devDependencies": {
+    "@eslint-react/eslint-plugin": "^5.7.0",
+    "@eslint/js": "^10.0.1",
+    "@modyfi/vite-plugin-yaml": "^1.1.1",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/mapbox__polyline": "^1.0.5",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
+  }
+}
