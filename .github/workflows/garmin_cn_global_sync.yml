@@ -1,0 +1,56 @@
+name: Garmin CN to Global Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 每天凌晨 3:00 北京时间 = 19:00 UTC
+    - cron: '0 19 * * *'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  sync:
+    name: Sync CN to Global
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: 'requirements.txt'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Sync Garmin CN to Global
+        run: |
+          python run_page/garmin_sync_cn_global.py \
+            "${{ secrets.GARMIN_SECRET_STRING_CN }}" \
+            "${{ secrets.GARMIN_SECRET_STRING }}"
+
+      - name: Push new activities
+        run: |
+          git config --local user.email 'action@github.com'
+          git config --local user.name 'GitHub Action'
+          git add .
+          git commit -m 'sync garmin cn to global' || echo 'nothing to commit'
+          git push || echo 'nothing to push'
+
+  publish_github_pages:
+    needs: sync
+    if: needs.sync.result == 'success'
+    name: Build and publish Github Pages
+    uses: ./.github/workflows/gh-pages.yml
+    with:
+      save_data_in_github_cache: false
+      data_cache_prefix: track_data
