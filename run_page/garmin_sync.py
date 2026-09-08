@@ -20,6 +20,7 @@ from lxml import etree
 import aiofiles
 import garth
 import httpx
+import requests
 from config import FOLDER_DICT, JSON_FILE, SQL_FILE
 from garmin_device_adaptor import process_garmin_data
 from utils import make_activities_file
@@ -63,7 +64,7 @@ class Garmin:
         self.modern_url = self.URL_DICT.get("MODERN_URL")
         garth.client.loads(secret_string)
         if garth.client.oauth2_token.expired:
-            garth.client.refresh_oauth2()
+            self._refresh_oauth2()
 
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
@@ -74,6 +75,26 @@ class Garmin:
         self.is_only_running = is_only_running
         self.upload_url = self.URL_DICT.get("UPLOAD_URL")
         self.activity_url = self.URL_DICT.get("ACTIVITY_URL")
+
+    def _refresh_oauth2(self):
+        # Garmin rate-limits the OAuth2 token exchange endpoint (HTTP 429).
+        # Retry with backoff so a transient rate limit self-heals.
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            try:
+                garth.client.refresh_oauth2()
+                return
+            except requests.exceptions.HTTPError as e:
+                status = getattr(getattr(e, "response", None), "status_code", None)
+                if status == 429 and attempt < max_attempts - 1:
+                    wait = 60 * (attempt + 1)
+                    print(
+                        f"OAuth2 token exchange rate-limited (HTTP 429), "
+                        f"retrying in {wait}s (attempt {attempt + 1}/{max_attempts - 1})..."
+                    )
+                    time.sleep(wait)
+                    continue
+                raise
 
     async def fetch_data(self, url, retrying=False):
         """
