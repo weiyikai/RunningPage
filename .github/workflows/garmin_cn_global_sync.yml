@@ -2,6 +2,12 @@ name: Garmin CN to Global Sync
 
 on:
   workflow_dispatch:
+    inputs:
+      reverse:
+        description: '反向同步（国际服 → 国内服），默认关闭'
+        required: false
+        type: boolean
+        default: false
   schedule:
     # 每天凌晨 3:00 北京时间 = 19:00 UTC
     - cron: '0 19 * * *'
@@ -13,7 +19,7 @@ permissions:
 
 jobs:
   sync:
-    name: Sync CN to Global
+    name: Sync Garmin (CN <-> Global)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,18 +38,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Sync Garmin CN to Global
-        run: |
-          python run_page/garmin_sync_cn_global.py \
-            "${{ secrets.GARMIN_SECRET_STRING_CN }}" \
-            "${{ secrets.GARMIN_SECRET_STRING }}"
+      - name: Sync Garmin
+        run: python run_page/garmin_sync_cn_global.py "${{ secrets.GARMIN_SECRET_STRING_CN }}" "${{ secrets.GARMIN_SECRET_STRING }}" ${{ inputs.reverse && '--reverse' || '' }}
 
       - name: Push new activities
         run: |
           git config --local user.email 'action@github.com'
           git config --local user.name 'GitHub Action'
           git add .
-          git commit -m 'sync garmin cn to global' || echo 'nothing to commit'
+          git commit -m 'sync garmin activities' || echo 'nothing to commit'
           git push || echo 'nothing to push'
 
   publish_github_pages:

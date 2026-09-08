@@ -269,9 +269,11 @@ def add_summary_info(file_data, summary_infos, fields=None):
 
 
 async def download_garmin_data(
-    client, activity_id, file_type="gpx", summary_infos=None
+    client, activity_id, file_type="gpx", summary_infos=None, gpx_folder=None
 ):
     folder = FOLDER_DICT.get(file_type, "gpx")
+    if gpx_folder is None:
+        gpx_folder = FOLDER_DICT["gpx"]
     try:
         file_data = await client.download_activity(activity_id, file_type=file_type)
         if summary_infos is not None and file_type == "gpx":
@@ -295,7 +297,7 @@ async def download_garmin_data(
                 elif file_info.filename.endswith(".gpx"):
                     os.rename(
                         os.path.join(folder, f"{activity_id}_ACTIVITY.gpx"),
-                        os.path.join(FOLDER_DICT["gpx"], f"{activity_id}.gpx"),
+                        os.path.join(gpx_folder, f"{activity_id}.gpx"),
                     )
                 else:
                     os.remove(os.path.join(folder, file_info.filename))
@@ -351,7 +353,13 @@ def get_garmin_summary_infos(activity_summary, activity_id):
 
 
 async def download_new_activities(
-    secret_string, auth_domain, downloaded_ids, is_only_running, folder, file_type
+    secret_string,
+    auth_domain,
+    downloaded_ids,
+    is_only_running,
+    folder,
+    file_type,
+    gpx_folder=None,
 ):
     client = Garmin(secret_string, auth_domain, is_only_running)
     # because I don't find a para for after time, so I use garmin-id as filename
@@ -379,7 +387,11 @@ async def download_new_activities(
         10,
         [
             download_garmin_data(
-                client, id, file_type=file_type, summary_infos=garmin_summary_infos_dict
+                client,
+                id,
+                file_type=file_type,
+                summary_infos=garmin_summary_infos_dict,
+                gpx_folder=gpx_folder,
             )
             for id in to_generate_garmin_ids
         ],
