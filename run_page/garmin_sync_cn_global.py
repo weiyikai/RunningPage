@@ -96,16 +96,21 @@ if __name__ == "__main__":
             to_upload_files.append(os.path.join(gpx_folder, f"{i}.gpx"))
 
     print("Files to sync:" + " ".join(to_upload_files))
-    garmin_upload_client = Garmin(
-        upload_secret,
-        upload_domain,
-        is_only_running,
-    )
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(
-        garmin_upload_client.upload_activities_files(to_upload_files)
-    )
-    loop.run_until_complete(future)
+    if not to_upload_files:
+        # nothing new to upload — skip so we don't hit the target account's
+        # token exchange endpoint (which Garmin rate-limits) for no reason.
+        print("No new files to upload, skip")
+    else:
+        garmin_upload_client = Garmin(
+            upload_secret,
+            upload_domain,
+            is_only_running,
+        )
+        loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(
+            garmin_upload_client.upload_activities_files(to_upload_files)
+        )
+        loop.run_until_complete(future)
 
     # Step 2:
     # Generate track from fit/gpx file. Only the forward CN -> Global direction feeds

@@ -79,7 +79,7 @@ class Garmin:
     def _refresh_oauth2(self):
         # Garmin rate-limits the OAuth2 token exchange endpoint (HTTP 429).
         # Retry with backoff so a transient rate limit self-heals.
-        max_attempts = 5
+        max_attempts = 3
         for attempt in range(max_attempts):
             try:
                 garth.client.refresh_oauth2()
@@ -290,9 +290,15 @@ def add_summary_info(file_data, summary_infos, fields=None):
 
 
 async def download_garmin_data(
-    client, activity_id, file_type="gpx", summary_infos=None, gpx_folder=None
+    client,
+    activity_id,
+    file_type="gpx",
+    summary_infos=None,
+    gpx_folder=None,
+    folder=None,
 ):
-    folder = FOLDER_DICT.get(file_type, "gpx")
+    if folder is None:
+        folder = FOLDER_DICT.get(file_type, "gpx")
     if gpx_folder is None:
         gpx_folder = FOLDER_DICT["gpx"]
     try:
@@ -311,12 +317,12 @@ async def download_garmin_data(
             for file_info in zip_file.infolist():
                 zip_file.extract(file_info, folder)
                 if file_info.filename.endswith(".fit"):
-                    os.rename(
+                    os.replace(
                         os.path.join(folder, f"{activity_id}_ACTIVITY.fit"),
                         os.path.join(folder, f"{activity_id}.fit"),
                     )
                 elif file_info.filename.endswith(".gpx"):
-                    os.rename(
+                    os.replace(
                         os.path.join(folder, f"{activity_id}_ACTIVITY.gpx"),
                         os.path.join(gpx_folder, f"{activity_id}.gpx"),
                     )
@@ -413,6 +419,7 @@ async def download_new_activities(
                 file_type=file_type,
                 summary_infos=garmin_summary_infos_dict,
                 gpx_folder=gpx_folder,
+                folder=folder,
             )
             for id in to_generate_garmin_ids
         ],
