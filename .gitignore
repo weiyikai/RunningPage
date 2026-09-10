@@ -26,3 +26,7 @@ route.png
 route.svg
 
 .env
+
+# Garmin auto-renewal credentials & cached secrets (local only)
+.garmin_credentials
+.garmin_secrets

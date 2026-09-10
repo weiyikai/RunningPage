@@ -10,6 +10,7 @@ import sys
 
 
 from config import FIT_FOLDER, GPX_FOLDER, JSON_FILE, SQL_FILE
+from garmin_secret_manager import get_secrets, load_credentials
 from garmin_sync import Garmin, get_downloaded_ids
 from garmin_sync import download_new_activities
 from utils import make_activities_file
@@ -40,8 +41,13 @@ if __name__ == "__main__":
     secret_string_global = options.global_secret_string
     is_only_running = options.only_run
     if secret_string_cn is None or secret_string_global is None:
-        print("Missing argument nor valid configuration file")
-        sys.exit(1)
+        # No explicit secrets passed -> auto-renew from local .garmin_credentials.
+        if not load_credentials():
+            print("Missing argument nor valid configuration file")
+            sys.exit(1)
+        secrets = get_secrets()
+        secret_string_cn = secrets["cn"]
+        secret_string_global = secrets["global"]
 
     # direction: default CN -> Global; --reverse flips to Global -> CN
     if options.reverse:

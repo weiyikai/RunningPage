@@ -39,7 +39,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Sync Garmin
-        run: python run_page/garmin_sync_cn_global.py "${{ secrets.GARMIN_SECRET_STRING_CN }}" "${{ secrets.GARMIN_SECRET_STRING }}" ${{ inputs.reverse && '--reverse' || '' }}
+        env:
+          # 自动续期：这里不再使用预生成的 secret string，而是每次用账号密码
+          # 重新登录/刷新，避免 oauth1 token 过期导致同步失败。
+          GARMIN_CN_EMAIL: ${{ secrets.GARMIN_CN_EMAIL }}
+          GARMIN_CN_PASSWORD: ${{ secrets.GARMIN_CN_PASSWORD }}
+          GARMIN_GLOBAL_EMAIL: ${{ secrets.GARMIN_GLOBAL_EMAIL }}
+          GARMIN_GLOBAL_PASSWORD: ${{ secrets.GARMIN_GLOBAL_PASSWORD }}
+        run: python run_page/garmin_sync_cn_global.py ${{ inputs.reverse && '--reverse' || '' }}
 
       - name: Push new activities
         run: |
