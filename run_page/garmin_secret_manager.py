@@ -95,25 +95,32 @@ def _http_status(exc):
 
 
 def _login_with_retry(account, email, password, max_attempts=5):
-    """garth.login with exponential backoff on HTTP 429 (Garmin rate limits
-    the SSO login endpoint, especially from shared/datacenter IPs)."""
+    """garth.login with exponential backoff.
+
+    Retries on:
+    - HTTP 429 (Garmin rate-limits the SSO login endpoint, especially from
+      shared/datacenter IPs)
+    - transient network failures (DNS, connect, timeout) common on
+      GitHub-hosted runners
+    """
     last_exc = None
     for attempt in range(max_attempts):
         try:
             return garth.login(email, password)
         except (GarthHTTPError, requests.exceptions.HTTPError) as e:
-            last_exc = e
             if _http_status(e) != 429:
                 raise
-            if attempt >= max_attempts - 1:
-                break
-            wait = 60 * (attempt + 1)
-            print(
-                f"[garmin_secret_manager] login '{account}' rate-limited "
-                f"(HTTP 429), retry in {wait}s "
-                f"(attempt {attempt + 1}/{max_attempts})..."
-            )
-            time.sleep(wait)
+            last_exc, reason = e, "HTTP 429"
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            last_exc, reason = e, type(e).__name__
+        if attempt >= max_attempts - 1:
+            break
+        wait = 60 * (attempt + 1)
+        print(
+            f"[garmin_secret_manager] login '{account}' failed ({reason}), "
+            f"retry in {wait}s (attempt {attempt + 1}/{max_attempts})..."
+        )
+        time.sleep(wait)
     raise last_exc
 
 
