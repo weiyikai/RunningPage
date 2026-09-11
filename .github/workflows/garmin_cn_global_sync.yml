@@ -20,7 +20,12 @@ permissions:
 jobs:
   sync:
     name: Sync Garmin (CN <-> Global)
-    runs-on: ubuntu-latest
+    # 自托管 runner：跑在你自己的 Windows 机器上，用住宅 IP 访问 Garmin，
+    # 规避 GitHub 托管 runner 的数据中心 IP 被 429 限流 + DNS 解析失败的问题。
+    runs-on: [self-hosted, Windows, X64]
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
