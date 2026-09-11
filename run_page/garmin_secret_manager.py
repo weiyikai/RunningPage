@@ -21,8 +21,11 @@ cannot run fully unattended.
 import argparse
 import json
 import os
+import time
 
 import garth
+import requests
+from garth.exc import GarthHTTPError
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 CREDENTIALS_FILE = os.path.join(REPO_ROOT, ".garmin_credentials")
@@ -81,6 +84,39 @@ def save_cached_secrets(secrets):
     _save_json(SECRETS_FILE, secrets)
 
 
+def _http_status(exc):
+    # garth wraps requests HTTPError in GarthHTTPError(.error); the refresh
+    # path raises the raw requests.exceptions.HTTPError instead.
+    inner = getattr(exc, "error", None)
+    resp = getattr(inner, "response", None) if inner is not None else None
+    if resp is None:
+        resp = getattr(exc, "response", None)
+    return getattr(resp, "status_code", None)
+
+
+def _login_with_retry(account, email, password, max_attempts=5):
+    """garth.login with exponential backoff on HTTP 429 (Garmin rate limits
+    the SSO login endpoint, especially from shared/datacenter IPs)."""
+    last_exc = None
+    for attempt in range(max_attempts):
+        try:
+            return garth.login(email, password)
+        except (GarthHTTPError, requests.exceptions.HTTPError) as e:
+            last_exc = e
+            if _http_status(e) != 429:
+                raise
+            if attempt >= max_attempts - 1:
+                break
+            wait = 60 * (attempt + 1)
+            print(
+                f"[garmin_secret_manager] login '{account}' rate-limited "
+                f"(HTTP 429), retry in {wait}s "
+                f"(attempt {attempt + 1}/{max_attempts})..."
+            )
+            time.sleep(wait)
+    raise last_exc
+
+
 def get_or_refresh_secret(account, email, password):
     """Return a valid secret string for ``account`` ("cn" or "global")."""
     _configure_domain(account)
@@ -103,7 +139,7 @@ def get_or_refresh_secret(account, email, password):
                   f"({e}), re-login")
 
     _configure_domain(account)
-    garth.login(email, password)
+    _login_with_retry(account, email, password)
     fresh = garth.client.dumps()
     cache[account] = fresh
     save_cached_secrets(cache)
