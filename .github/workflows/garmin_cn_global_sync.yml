@@ -21,11 +21,12 @@ jobs:
   sync:
     name: Sync Garmin (CN <-> Global)
     # 自托管 runner：跑在你自己的 Windows 机器上，用住宅 IP 访问 Garmin，
-    # 规避 GitHub 托管 runner 的数据中心 IP 被 429 限流 + DNS 解析失败的问题。
+    # 规避 GitHub 托管 runner 的数据中心 IP 被 429 限流的问题。
+    # 注意：不要用 shell: bash，Windows 上 bash 可能解析到 WSL 的 bash 导致路径报错。
     runs-on: [self-hosted, Windows, X64]
     defaults:
       run:
-        shell: bash
+        shell: powershell
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,12 +55,18 @@ jobs:
         run: python run_page/garmin_sync_cn_global.py ${{ inputs.reverse && '--reverse' || '' }}
 
       - name: Push new activities
+        shell: powershell
         run: |
           git config --local user.email 'action@github.com'
           git config --local user.name 'GitHub Action'
           git add .
-          git commit -m 'sync garmin activities' || echo 'nothing to commit'
-          git push || echo 'nothing to push'
+          git commit -m 'sync garmin activities'
+          if ($LASTEXITCODE -eq 0) {
+            git push
+            exit $LASTEXITCODE
+          }
+          Write-Host 'nothing to commit, skip push'
+          exit 0
 
   publish_github_pages:
     needs: sync
