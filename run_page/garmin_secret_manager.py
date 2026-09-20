@@ -29,7 +29,14 @@ from garth.exc import GarthHTTPError
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 CREDENTIALS_FILE = os.path.join(REPO_ROOT, ".garmin_credentials")
-SECRETS_FILE = os.path.join(REPO_ROOT, ".garmin_secrets")
+# Cache lives OUTSIDE the checkout dir: actions/checkout runs `git clean -ffdx`
+# on every run, which deletes gitignored files like `.garmin_secrets`, forcing a
+# full Garmin login each time (and Garmin rate-limits repeat logins -> 429).
+# A stable path under the user's home survives checkout clean on the runner.
+SECRETS_FILE = os.environ.get(
+    "GARMIN_SECRETS_FILE",
+    os.path.join(os.path.expanduser("~"), ".garmin_secrets"),
+)
 
 ACCOUNTS = ("cn", "global")
 
