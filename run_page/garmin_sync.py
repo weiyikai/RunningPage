@@ -313,21 +313,27 @@ async def download_garmin_data(
         async with aiofiles.open(file_path, "wb") as fb:
             await fb.write(file_data)
         if need_unzip:
-            zip_file = zipfile.ZipFile(file_path, "r")
-            for file_info in zip_file.infolist():
-                zip_file.extract(file_info, folder)
-                if file_info.filename.endswith(".fit"):
-                    os.replace(
-                        os.path.join(folder, f"{activity_id}_ACTIVITY.fit"),
-                        os.path.join(folder, f"{activity_id}.fit"),
-                    )
-                elif file_info.filename.endswith(".gpx"):
-                    os.replace(
-                        os.path.join(folder, f"{activity_id}_ACTIVITY.gpx"),
-                        os.path.join(gpx_folder, f"{activity_id}.gpx"),
-                    )
-                else:
-                    os.remove(os.path.join(folder, file_info.filename))
+            # Keep the ZipFile open inside a `with` so it is closed before the
+            # os.remove(file_path) below. On Windows an open zip handle makes
+            # os.remove fail with WinError 32 ("file in use by another process"),
+            # which silently dropped the download and leaked orphaned .zip files.
+            with zipfile.ZipFile(file_path, "r") as zip_file:
+                for file_info in zip_file.infolist():
+                    zip_file.extract(file_info, folder)
+                    inner = os.path.join(folder, file_info.filename)
+                    if file_info.filename.endswith(".fit"):
+                        os.replace(inner, os.path.join(folder, f"{activity_id}.fit"))
+                    elif file_info.filename.endswith(".gpx"):
+                        os.replace(
+                            inner, os.path.join(gpx_folder, f"{activity_id}.gpx")
+                        )
+                    elif file_info.filename.endswith(".tcx"):
+                        # Garmin stores some activities (e.g. imported from Strava or
+                        # other sources) as TCX only; keep it so the sync can upload
+                        # it instead of silently dropping the activity.
+                        os.replace(inner, os.path.join(folder, f"{activity_id}.tcx"))
+                    else:
+                        os.remove(inner)
             os.remove(file_path)
     except Exception as e:
         print(f"Failed to download activity {activity_id}: {str(e)}")

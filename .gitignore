@@ -30,3 +30,8 @@ route.svg
 # Garmin auto-renewal credentials & cached secrets (local only)
 .garmin_credentials
 .garmin_secrets
+
+# Garmin FIT download intermediate archives (the extracted .fit/.gpx/.tcx is
+# what gets committed; the .zip is only a download container)
+FIT_OUT/*.zip
+GPX_OUT/*.zip

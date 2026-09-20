@@ -97,6 +97,9 @@ if __name__ == "__main__":
         if os.path.exists(os.path.join(fit_folder, f"{i}.fit")):
             # upload fit files
             to_upload_files.append(os.path.join(fit_folder, f"{i}.fit"))
+        elif os.path.exists(os.path.join(fit_folder, f"{i}.tcx")):
+            # upload tcx files (Garmin stores some activities as TCX only)
+            to_upload_files.append(os.path.join(fit_folder, f"{i}.tcx"))
         elif os.path.exists(os.path.join(gpx_folder, f"{i}.gpx")):
             # upload gpx files which are manually uploaded to garmin connect
             to_upload_files.append(os.path.join(gpx_folder, f"{i}.gpx"))
