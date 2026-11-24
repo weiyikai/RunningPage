@@ -313,11 +313,11 @@ wheels = [
 
 [[package]]
 name = "garmin-fit-sdk"
-version = "21.178.0"
+version = "21.214.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fb/80/c672ffa32372084211c008aeceadc1d96a0a6e24b4b2b3b5ac8bcd997eca/garmin_fit_sdk-21.178.0.tar.gz", hash = "sha256:1bf59685d4a2cbf990229efe2fbe34b7c02d9f5abad9b0da8ce57edf72163e43", size = 229456, upload-time = "2025-07-16T16:30:29.358Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/ec/95de48c64dba3480048401c7f09839b5c70627b9250ac388e2cb180b56ae/garmin_fit_sdk-21.214.0.tar.gz", hash = "sha256:c64c61c5582fc3e609a09a64ff9ff1ee78126da91dfc72ceefd378a92bb290ce", size = 199222, upload-time = "2026-08-25T17:25:23.838Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/72/521344e44c82dc809f7fcc565b81237ac12a58097eca28c820ff7d114783/garmin_fit_sdk-21.178.0-py2.py3-none-any.whl", hash = "sha256:64f6968f067f73f0fd68332da49fc3c2cadce98bc0182c34f8a623dc5c50642c", size = 238052, upload-time = "2025-07-16T16:30:28.188Z" },
+    { url = "https://files.pythonhosted.org/packages/63/b5/5576f3336eea7edb2385177a4e10e3cfb3467aed754bf2242d0a2c2383d2/garmin_fit_sdk-21.214.0-py3-none-any.whl", hash = "sha256:9fa66c8bc6983808e784ba5058c550831c2621862097f41998a3ba129b7b7c6d", size = 219492, upload-time = "2026-08-25T17:25:22.511Z" },
 ]
 
 [[package]]
